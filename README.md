@@ -6,18 +6,21 @@ SETUP
 
 1. clone the repository
 
-2. create local environment
-  - pip install virtualenv
-  - virtualenv venv
+2. create local environment:  
   
-  On Windows:
-  
-    venv\Scripts\activate
-    
-  On macOS and Linux:
-  
-    source venv/bin/activate
-    
-3.pip install -r requirements-dev.txt
+    `pip install virtualenv`
 
-4.python app.py
+    `virtualenv venv`
+  
+    On Windows:
+  
+    `venv\Scripts\activate`
+  
+    On macOS and Linux:
+  
+    `source venv/bin/activate`
+    
+3. `pip install -r requirements-dev.txt`
+
+4. `python app.py`
+
