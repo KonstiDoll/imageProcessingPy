@@ -20,7 +20,7 @@ SETUP
   
     `source venv/bin/activate`
     
-3. `pip install -r requirements-dev.txt`
+3. `pip install -r requirements.txt`
 
 4. `python app.py`
 
