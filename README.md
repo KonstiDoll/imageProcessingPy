@@ -9,9 +9,13 @@ SETUP
 2. create local environment
   - pip install virtualenv
   - virtualenv venv
+  
   On Windows:
+  
     venv\Scripts\activate
+    
   On macOS and Linux:
+  
     source venv/bin/activate
     
 3.pip install -r requirements-dev.txt
