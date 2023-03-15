@@ -5,7 +5,7 @@ import io
 from PIL import Image
 import numpy as np
 from image_processing import (
-    apply_grayscale, apply_canny, apply_color_quantization, apply_custom_color_quantization)
+    apply_grayscale, apply_canny, apply_color_quantization, apply_custom_color_quantization, apply_find_contours)
 
 app = Flask(__name__)
 
@@ -38,13 +38,14 @@ def index():
             num_colors = int(request.form["num_colors"])
             colors = [tuple(int(request.form[f"color_{i}"][j:j+2], 16) for j in (1, 3, 5)) for i in range(num_colors)]
             processed_images = apply_custom_color_quantization(image, colors)
+        elif processing_method == "find_Contours":
+            processed_images = apply_find_contours(image)
         else:
             processed_images = [image]
 
         # Convert the processed images back to PNG format and generate the HTML output
         output = ""
         for processed_image in processed_images:
-            print(processed_image)
             # if isinstance(processed_image, np.ndarray) and len(processed_image.shape) == 2:  # Grayscale image
             #     output_image = Image.fromarray(processed_image, mode='L')
             # else:  # Color image
@@ -64,6 +65,7 @@ def index():
         <option value="canny">Canny Edge Detection</option>
         <option value="color_quantization">Color Quantization</option>
         <option value="custom_color_quantization">Custom Color Quantization</option>
+        <option value="find_Contours">Find Contours</option>
     </select>
     <input type="number" name="num_colors" min="1" max="10" value="3" id="numColorsQuant" style="display:none;" required>
 

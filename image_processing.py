@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from sklearn.cluster import KMeans
 from scipy.spatial import KDTree
+import random
 
 def apply_grayscale(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -54,3 +55,24 @@ def apply_custom_color_quantization(image, colors):
     quantized_image = quantized_pixels.reshape(height, width, channels)
 
     return [quantized_image]
+
+def apply_find_contours(image):
+    # Ensure the image is in grayscale
+    if len(image.shape) == 3:
+        gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    else:
+        gray_image = image
+
+
+    # Find contours
+    contours, _ = cv2.findContours(gray_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Draw contours on a blank image
+    contour_image = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+    for contour in contours:
+        color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        print(color)
+        cv2.drawContours(contour_image, [contour], -1, color, 1)
+    
+    return [contour_image]
+
