@@ -2,7 +2,7 @@
 
 Simple webUi to use Opencv to manipulate Image in order to prepare for pen drawing table!
 
-###### SETUP ######
+SETUP
 
 1. clone the repository
 2. create local environment
