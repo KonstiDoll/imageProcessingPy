@@ -1,11 +1,11 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import cv2
 import base64
 import io
 from PIL import Image
 import numpy as np
 from image_processing import (
-    apply_grayscale, apply_canny, apply_color_quantization, apply_custom_color_quantization, apply_find_contours)
+    apply_grayscale, apply_canny, apply_color_quantization, apply_custom_color_quantization, apply_find_contours, find_contours_and_generate_gcode)
 
 app = Flask(__name__)
 
@@ -23,6 +23,18 @@ def index():
         
         # Read the processing method from the request
         processing_method = request.form["processing_method"]
+
+        if request.form.get("submit_type") == "generate_gcode":
+            # Generate G-code and contour image
+            gcode, contour_image = find_contours_and_generate_gcode(image)
+
+            # Save the contour image as base64 string
+            buffered = io.BytesIO()
+            contour_image.save(buffered, format="PNG")
+            contour_image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+            # Return the contour image and G-code
+            return jsonify({'contour_image_base64': contour_image_base64, 'gcode': gcode})
 
         # Apply the chosen processing method
         if processing_method == "grayscale":
@@ -42,6 +54,7 @@ def index():
             processed_images = apply_find_contours(image)
         else:
             processed_images = [image]
+
 
         # Convert the processed images back to PNG format and generate the HTML output
         output = ""
@@ -68,14 +81,42 @@ def index():
         <option value="find_Contours">Find Contours</option>
     </select>
     <input type="number" name="num_colors" min="1" max="10" value="3" id="numColorsQuant" style="display:none;" required>
-
     <input type="number" name="num_colors" min="1" max="10" value="3" id="numColors" style="display:none;" required>
     <div id="colorPickers" style="display:none;"></div>
+    <input type="hidden" name="submit_type" value="process_image">
     <button type="submit">Submit</button>
+    <input type="hidden" name="submit_type" value="generate_gcode">
+    <button type="submit" name="generate_gcode">Generate G-code</button>
+
 </form>
+<canvas id="gcodeCanvas" width="1000" height="1000" style="border:1px solid #000000;"></canvas>
+<div id="contour-images"></div>
+<textarea id="gcode-display" readonly></textarea>
+
 <script src="/static/main.js"></script>
 ''' + output
 
+@app.route('/generate_gcode', methods=['POST'])
+def generate_gcode():
+    # Read the image from the request
+    image_data = request.files["image"].read()
+    image = Image.open(io.BytesIO(image_data))
+    image = np.array(image)
+
+    gcode, contour_image = find_contours_and_generate_gcode(image)
+
+    
+
+    
+    contour_image_pil = contour_image
+    buffer = io.BytesIO()
+    contour_image_pil.save(buffer, format="PNG")
+    contour_image_base64 = base64.b64encode(buffer.getvalue()).decode("ascii")
+
+    return jsonify({
+        'gcode': gcode,
+        'contour_image': contour_image_base64
+    })
 
 
 if __name__ == "__main__":
