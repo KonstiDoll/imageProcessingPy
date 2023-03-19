@@ -1,9 +1,12 @@
+import base64
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans
 from scipy.spatial import KDTree
 import random
-from PIL import Image
+from PIL import Image, ImageDraw
+from svg.path import Path, Line
+import svgwrite
 
 def apply_grayscale(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -157,3 +160,39 @@ def generate_gcode(contours, feed_rate=3000, pen_up_height=2, pen_down_height=0,
     gcode_str = '\n'.join(gcode)
     return gcode_str
 
+def apply_horiz_line_filling(input_image, line_spacing):
+    # Convert the NumPy ndarray to a Pillow Image object
+    img = Image.fromarray(input_image.astype('uint8')).convert('1')
+    
+    # Create an empty path
+    path = Path()
+    
+    # Draw horizontal lines with specified line_spacing
+    for y in range(0, img.size[1], line_spacing):
+        start_x = None
+        for x in range(img.size[0]):
+            if img.getpixel((x, y)) == 0:  # If the input image pixel is black
+                if start_x is None:
+                    start_x = x
+            elif start_x is not None:
+                path.append(Line(start=(start_x, y), end=(x-1, y)))
+                start_x = None
+
+    # Create an SVG drawing and add the path to it
+    output_path = './output.svg'
+    svg_drawing = svgwrite.Drawing(output_path, size=img.size)
+    path_element = svg_drawing.add(svg_drawing.path(fill="none", stroke="black", stroke_width="1"))
+    for segment in path:
+        if segment.start != segment.end:
+            path_element.push("M", segment.start, "L", segment.end)
+
+    # Save the SVG file
+    svg_drawing.save()
+
+    with open(output_path, 'rb') as f:
+        svg_data = f.read()
+    svg_data_uri = 'data:image/svg+xml;base64,' + base64.b64encode(svg_data).decode('utf-8')
+
+    
+    # Return the blended image
+    return [svg_data_uri]

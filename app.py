@@ -5,7 +5,8 @@ import io
 from PIL import Image
 import numpy as np
 from image_processing import (
-    apply_grayscale, apply_canny, apply_color_quantization, apply_custom_color_quantization, apply_find_contours, find_contours_and_generate_gcode)
+    apply_grayscale, apply_canny, apply_color_quantization, apply_custom_color_quantization, apply_find_contours, find_contours_and_generate_gcode,
+    apply_horiz_line_filling)
 
 app = Flask(__name__)
 
@@ -35,7 +36,8 @@ def index():
 
             # Return the contour image and G-code
             return jsonify({'contour_image_base64': contour_image_base64, 'gcode': gcode})
-
+        processed_images = []
+        processed_svgs = []
         # Apply the chosen processing method
         if processing_method == "grayscale":
             processed_images = [apply_grayscale(image)]
@@ -52,12 +54,18 @@ def index():
             processed_images = apply_custom_color_quantization(image, colors)
         elif processing_method == "find_Contours":
             processed_images = apply_find_contours(image)
+        elif processing_method == "horizontal_line_filling":
+            line_spacing = int(request.form["line_spacing"])
+            processed_svgs = apply_horiz_line_filling(image, line_spacing)
         else:
             processed_images = [image]
 
 
         # Convert the processed images back to PNG format and generate the HTML output
         output = ""
+        for processed_svg in processed_svgs:
+            output+= f'<img src="{ processed_svg }" alt="SVG Image">'
+
         for processed_image in processed_images:
             # if isinstance(processed_image, np.ndarray) and len(processed_image.shape) == 2:  # Grayscale image
             #     output_image = Image.fromarray(processed_image, mode='L')
@@ -79,8 +87,10 @@ def index():
         <option value="color_quantization">Color Quantization</option>
         <option value="custom_color_quantization">Custom Color Quantization</option>
         <option value="find_Contours">Find Contours</option>
+        <option value="horizontal_line_filling">Fill Horizontally</option>
     </select>
     <input type="number" name="num_colors" min="1" max="10" value="3" id="numColorsQuant" style="display:none;" required>
+    <input type="number" name="line_spacing" min="1" max="100" value="3" id="line_spacing" style="display:none;" required>
     <input type="number" name="num_colors" min="1" max="10" value="3" id="numColors" style="display:none;" required>
     <div id="colorPickers" style="display:none;"></div>
     <input type="hidden" name="submit_type" value="process_image">
@@ -89,13 +99,15 @@ def index():
     <button type="submit" name="generate_gcode">Generate G-code</button>
 
 </form>
-<canvas id="gcodeCanvas" width="1000" height="1000" style="border:1px solid #000000;"></canvas>
+
 <div id="contour-images"></div>
-<textarea id="gcode-display" readonly></textarea>
+
 
 <script src="/static/main.js"></script>
 ''' + output
+# <canvas id="gcodeCanvas" width="1000" height="1000" style="border:1px solid #000000;"></canvas>
 
+# <textarea id="gcode-display" readonly></textarea>
 @app.route('/generate_gcode', methods=['POST'])
 def generate_gcode():
     # Read the image from the request
@@ -104,10 +116,6 @@ def generate_gcode():
     image = np.array(image)
 
     gcode, contour_image = find_contours_and_generate_gcode(image)
-
-    
-
-    
     contour_image_pil = contour_image
     buffer = io.BytesIO()
     contour_image_pil.save(buffer, format="PNG")

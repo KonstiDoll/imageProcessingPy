@@ -2,6 +2,7 @@ function showColorPickers() {
     var processingMethod = document.querySelector('select[name="processing_method"]').value;
     var numColorsInput = document.getElementById('numColors');
     var colorPickersDiv = document.getElementById('colorPickers');
+    
     if (processingMethod === 'custom_color_quantization') {
         numColorsInput.style.display = 'inline';
         colorPickersDiv.style.display = 'block';
@@ -27,6 +28,15 @@ function showNumColorsInput() {
         numColorsInput.style.display = 'inline';
     } else {
         numColorsInput.style.display = 'none';
+    }
+}
+function showSpacingSelector() {
+    var processingMethod = document.querySelector('select[name="processing_method"]').value;
+    var lineSpacingInput = document.getElementById('line_spacing');
+    if (processingMethod === 'horizontal_line_filling') {
+        lineSpacingInput.style.display = 'inline';
+    } else {
+        lineSpacingInput.style.display = 'none';
     }
 }
 function displayGcode(gcode) {
