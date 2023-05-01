@@ -7,6 +7,7 @@ import random
 from PIL import Image, ImageDraw
 from svg.path import Path, Line
 import svgwrite
+import math
 
 def apply_grayscale(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -193,6 +194,82 @@ def apply_horiz_line_filling(input_image, line_spacing):
         svg_data = f.read()
     svg_data_uri = 'data:image/svg+xml;base64,' + base64.b64encode(svg_data).decode('utf-8')
 
-    
+    import math
+
+import math
+
+def generate_spiral_path(image):
+    # Detect contours in the binary image
+    contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    # Get the largest contour
+    contour = max(contours, key=cv2.contourArea)
+
+    # Generate the spiral path for the contour
+    points = generate_spiral_points(contour)
+    spiral_svg = generate_spiral_svg(points)
+
+    # Save the SVG file
+    output_path = './output.svg'
+    with open(output_path, 'w') as f:
+        f.write(spiral_svg)
+
+    # Return the SVG path string
+    return [spiral_svg]
+
+def generate_spiral_points(center_x, center_y, radius, num_points):
+    """Generate `num_points` equidistant points along a spiral path starting from `(center_x, center_y)`."""
+    points = []
+    angle_step = 2 * math.pi / num_points  # The angle increment between points
+    current_radius = 0  # The current radius of the spiral
+    for i in range(num_points):
+        angle = i * angle_step
+        current_radius += radius * 0.02  # Increase the radius by a fixed factor each step
+        x = center_x + current_radius * math.cos(angle)
+        y = center_y + current_radius * math.sin(angle)
+        points.append((x, y))
+    return points
+
+import svgwrite
+
+def generate_spiral_svg(points):
+    path = svgwrite.path.Path(fill='none', stroke='black', stroke_width=1)
+
+    # Get the starting point of the spiral
+    start = points[0]
+
+    # Define the radius and step size of the spiral
+    radius = 5
+    step = 1
+
+    # Move to the starting point
+    path.push('M', start)
+
+    # Follow the contour with a spiral path
+    for i in range(len(points)):
+        # Get the current point
+        point = points[i]
+
+        # Calculate the distance between the current point and the starting point
+        distance = ((point[0] - start[0]) ** 2 + (point[1] - start[1]) ** 2) ** 0.5
+
+        # Calculate the angle of the spiral
+        angle = (distance / radius) * 2 * 3.14
+
+        # Calculate the new position of the spiral
+        x = start[0] + radius * (angle * 0.5 / 3.14) * (point[1] - start[1]) / distance
+        y = start[1] + radius * (angle * 0.5 / 3.14) * (point[0] - start[0]) / distance
+
+        # Draw a line to the new position
+        path.push('L', (x, y))
+
+        # Update the starting point and radius for the next step
+        start = (x, y)
+        radius += step
+
+    # Return the SVG path string
+    return path.tostring()
+
+
     # Return the blended image
     return [svg_data_uri]

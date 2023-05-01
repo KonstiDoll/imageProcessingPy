@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 from image_processing import (
     apply_grayscale, apply_canny, apply_color_quantization, apply_custom_color_quantization, apply_find_contours, find_contours_and_generate_gcode,
-    apply_horiz_line_filling)
+    apply_horiz_line_filling, generate_spiral_svg)
 
 app = Flask(__name__)
 
@@ -57,6 +57,8 @@ def index():
         elif processing_method == "horizontal_line_filling":
             line_spacing = int(request.form["line_spacing"])
             processed_svgs = apply_horiz_line_filling(image, line_spacing)
+        elif processing_method == "spiral_svg":
+            processed_svgs = generate_spiral_svg(image)
         else:
             processed_images = [image]
 
@@ -88,6 +90,7 @@ def index():
         <option value="custom_color_quantization">Custom Color Quantization</option>
         <option value="find_Contours">Find Contours</option>
         <option value="horizontal_line_filling">Fill Horizontally</option>
+        <option value="spiral_svg">Create Spiral Infill</option>
     </select>
     <input type="number" name="num_colors" min="1" max="10" value="3" id="numColorsQuant" style="display:none;" required>
     <input type="number" name="line_spacing" min="1" max="100" value="3" id="line_spacing" style="display:none;" required>
